@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>View page</title>
+</head>
+<body>
+	<p>I'm some content.</p>
+	<p>I was updated at: <span id="updatedTime"></span></p>
+	<script src="https://code.jquery.com/jquery-2.2.0.js"></script>
+	<script type="application/javascript">
+		//set to true to check if we loaded the first time
+		window.firstRun = true;
+		//Recursive closure
+		(function poll(){
+			//Get our target element
+			var timestamp = document.querySelector("#updatedTime");
+			//Start the recursive JSON ajax call.
+			setTimeout(function(){
+				$.ajax({ url: "poll.php", success: function(data){
+					//get the timestamp sent from the server
+					var dataTime= data.last_saved;
+					//Convert server time to a readable string
+					var epochTime = new Date(dataTime*1000);
+					//Get the local storage value
+					var savedTime = localStorage.getItem("savedTime");
+					
+					if(window.firstRun){
+						//Save the first value we got on first run
+						localStorage.setItem("savedTime",dataTime);
+						window.firstRun = false;
+					}
+					console.log(dataTime);
+					console.log(savedTime);
+					//Compare stored timestamp to the server one
+					if(dataTime == savedTime){
+						console.log("nothing new");
+					} else {
+						console.log("got new content");
+						// Do your stuff here and save the new time to localStorage
+						localStorage.setItem("savedTime", dataTime);
+						timestamp.innerHTML = epochTime;
+					}
+
+
+        			//Setup the next poll recursively
+        			poll();
+        		}, dataType: "json", method: "UPDATE"});
+			}, 2000);
+		})();
+	</script>
+</body>
+</html>
